@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF--8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GG Search</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
+
+    <!-- CSS Kodları -->
+    <style>
+        :root {
+            --glow-color: hsl(217, 100%, 65%); /* Fütüristik Mavi */
+            --background-color: #010409;
+            --text-color: #e6edf3;
+            --text-secondary-color: #7d8590;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            overflow-x: hidden;
+        }
+
+        /* --- Hareketli Parçacık Arka Planı --- */
+        #particle-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            background: var(--glow-color);
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: rise 20s infinite linear;
+        }
+        
+        .particle:nth-child(2n) { animation-duration: 30s; }
+        .particle:nth-child(3n) { animation-duration: 40s; opacity: 0.5; }
+
+        @keyframes rise {
+            from { transform: translateY(100vh) scale(0); }
+            to { transform: translateY(-10vh) scale(1); }
+        }
+
+
+        /* --- Ana İçerik --- */
+        .main-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .search-section {
+            padding: 60px 20px 30px 20px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            background: rgba(1, 4, 9, 0.7);
+            backdrop-filter: blur(16px);
+            z-index: 100;
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 56px;
+            color: #fff;
+            animation: pulse-glow 3s infinite ease-in-out;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { text-shadow: 0 0 10px var(--glow-color), 0 0 20px var(--glow-color); }
+            50% { text-shadow: 0 0 20px var(--glow-color), 0 0 40px var(--glow-color); }
+        }
+
+        .search-form {
+            display: flex;
+            margin-top: 30px;
+            border: 1.5px solid var(--glow-color);
+            border-radius: 50px;
+            box-shadow: 0 0 15px rgba(var(--glow-color), 0.4);
+            transition: box-shadow 0.3s ease;
+            animation: pulse-glow-border 3s infinite ease-in-out;
+        }
+
+        @keyframes pulse-glow-border {
+             0%, 100% { box-shadow: 0 0 15px rgba(var(--glow-color), 0.4); }
+             50% { box-shadow: 0 0 30px rgba(var(--glow-color), 0.7); }
+        }
+
+        .search-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            outline: none;
+            padding: 20px 30px;
+            font-size: 18px;
+            color: #fff;
+        }
+
+        .search-button {
+            background: var(--glow-color);
+            border: none;
+            border-radius: 0 50px 50px 0;
+            padding: 0 35px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .search-button:hover { background-color: hsl(217, 100%, 75%); }
+        .search-button svg { width: 24px; height: 24px; }
+        
+        /* --- YÜKLEME ANİMASYONU --- */
+        .loader-container {
+            display: flex;
+            justify-content: center;
+            padding: 50px;
+        }
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.2);
+            border-top-color: var(--glow-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* --- GOOGLE SONUÇLARI İÇİN ÖZEL STİLLER --- */
+        #results-section {
+            padding-top: 20px;
+            min-height: 50vh;
+        }
+
+        .initial-message {
+            text-align: center;
+            font-size: 18px;
+            padding: 50px;
+            color: var(--text-secondary-color);
+        }
+        
+        .gsc-control-cse { background: transparent !important; border: none !important; padding: 0 !important; }
+        .gsc-webResult.gsc-result { background-color: rgba(22, 27, 34, 0.5) !important; border: 1px solid #30363d !important; border-radius: 12px !important; padding: 20px !important; margin-bottom: 20px !important; transition: border-color 0.3s, box-shadow 0.3s; }
+        .gsc-webResult.gsc-result:hover { border-color: var(--glow-color) !important; box-shadow: 0 0 15px rgba(var(--glow-color), 0.3) !important; }
+        .gs-webResult.gs-result a.gs-title:link, .gs-webResult.gs-result a.gs-title:visited { color: #82aaff !important; font-size: 20px !important; }
+        .gsc-url-top, .gs-webResult .gs-visibleUrl-breadcrumb { color: var(--text-secondary-color) !important; }
+        .gs-webResult .gs-snippet { color: var(--text-color) !important; font-size: 16px !important; }
+        .gsc-results .gsc-cursor-box .gsc-cursor-page, .gsc-results .gsc-cursor-box .gsc-cursor-current-page { color: #82aaff !important; }
+        .gsc-search-box, .gsc-adBlock, .gsc-branding { display: none !important; }
+    </style>
+</head>
+<body>
+    
+    <!-- Hareketli Arka Plan Parçacıkları -->
+    <div id="particle-container"></div>
+
+    <!-- Ana Arama Arayüzü -->
+    <main class="main-container">
+        <section class="search-section">
+            <h1 class="logo">GG Search</h1>
+            <form class="search-form" id="search-form">
+                <input type="text" class="search-input" id="search-input-field" placeholder="İnternetin derinliklerinde ara..." required>
+                <button type="submit" class="search-button" aria-label="Ara">
+                    <svg xmlns="http://www.w.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#010409" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                </button>
+            </form>
+        </section>
+
+        <!-- Google'ın Sonuçları Göstereceği Alan -->
+        <section id="results-section">
+            <div class="initial-message">
+                <p>GG Search'e hoş geldin.<br>Keşfetmeye hazır mısın?</p>
+            </div>
+            <!-- Google sonuçları buraya gelecek -->
+            <div class="gcse-searchresults-only" style="display: none;"></div>
+        </section>
+    </main>
+    
+    <!-- Google Programmable Search Engine Kodu -->
+    <script async src="https://cse.google.com/cse.js?cx=0429df85ca8fa4085"></script>
+    
+    <!-- Bizim Özel JavaScript Kodumuz -->
+    <script>
+        const searchForm = document.getElementById('search-form');
+        const searchInput = document.getElementById('search-input-field');
+        const resultsSection = document.getElementById('results-section');
+        const googleResultsDiv = document.querySelector('.gcse-searchresults-only');
+
+        // Yükleme animasyonunu HTML olarak tanımla
+        const loaderHTML = `
+            <div class="loader-container">
+                <div class="loader"></div>
+            </div>
+        `;
+
+        searchForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const query = searchInput.value.trim();
+            if (query) {
+                // Önceki içeriği temizle ve yükleme animasyonunu göster
+                resultsSection.innerHTML = loaderHTML;
+                
+                // Google aramasını başlat
+                var element = google.search.cse.element.getElement('searchresults-only');
+                element.execute(query);
+
+                // Google sonuçları göstermeye hazır olduğunda, bizim div'imizi görünür yap
+                // Bu, sonuçlar yüklenene kadar boş bir alan görmeyi engeller.
+                googleResultsDiv.style.display = 'block';
+                // Google, sonuçları bu div'in içine yerleştirecek
+                resultsSection.appendChild(googleResultsDiv);
+            }
+        });
+
+        // Arka plan için parçacık oluşturan fonksiyon
+        function createParticles() {
+            const container = document.getElementById('particle-container');
+            const particleCount = 50;
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                const size = Math.random() * 4 + 1;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                particle.style.left = `${Math.random() * 100}%`;
+                particle.style.animationDelay = `${Math.random() * 20}s`;
+                container.appendChild(particle);
+            }
+        }
+
+        // Sayfa yüklendiğinde parçacıkları oluştur
+        window.onload = createParticles;
+    </script>
+
+</body>
+</html>
