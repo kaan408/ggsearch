@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GG Search - Stabil Sürüm</title>
+    <title>GG Search - Final Sürüm</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
 
@@ -23,17 +23,23 @@
             background-color: var(--background-color);
             color: var(--text-color);
         }
-        
-        /* --- Ana İçerik --- */
+
         .main-container {
             max-width: 900px;
             margin: 0 auto;
             padding: 20px;
         }
-
+        
+        /* ÜSTTE SABİT KALAN ARAMA BÖLÜMÜ */
         .search-section {
             padding: 60px 20px 30px 20px;
             text-align: center;
+            position: sticky;
+            top: 0;
+            background: rgba(1, 4, 9, 0.85); /* Hafif transparan arkaplan */
+            backdrop-filter: blur(16px);      /* Arkadaki içeriği bulanıklaştır */
+            z-index: 100;
+            border-bottom: 1px solid #30363d;
         }
 
         .logo {
@@ -41,7 +47,7 @@
             font-size: 56px;
             color: #fff;
             animation: pulse-glow 3s infinite ease-in-out;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
         }
 
         @keyframes pulse-glow {
@@ -49,88 +55,125 @@
             50% { text-shadow: 0 0 20px var(--glow-color), 0 0 40px var(--glow-color); }
         }
 
-        /* --- GOOGLE ARAMA KUTUSU VE SONUÇLARI İÇİN ÖZEL STİLLER --- */
-        .gcse-search {
-            min-height: 100vh;
-        }
-        
-        /* Genel Konteyner */
-        .gsc-control-cse {
-            background-color: transparent !important;
-            border: none !important;
-            padding: 0 !important;
-        }
-        
-        /* Arama Kutusu Bölümü */
-        .gsc-search-box-tools .gsc-search-box .gsc-input {
-            background-color: transparent !important;
-            border: 1.5px solid var(--glow-color) !important;
-            border-radius: 50px !important;
-            padding: 20px 25px !important;
-            color: var(--text-color) !important;
-            height: auto !important;
-        }
-        
-        /* Arama Butonu */
-        .gsc-search-button-v2, .gsc-search-button-v2:hover, .gsc-search-button-v2:focus {
-            background-color: var(--glow-color) !important;
-            border-color: var(--glow-color) !important;
-            border-radius: 50px !important;
-            padding: 10px 25px !important;
-            margin-left: 10px !important;
+        .search-form {
+            display: flex;
+            border: 1.5px solid var(--glow-color);
+            border-radius: 50px;
         }
 
-        /* Sonuç Kartları */
-        .gsc-webResult.gsc-result {
-            background-color: rgba(22, 27, 34, 0.5) !important;
-            border: 1px solid #30363d !important;
-            border-radius: 12px !important;
-            padding: 20px !important;
-            margin: 20px 0 !important;
-        }
-        .gsc-webResult.gsc-result:hover {
-            border-color: var(--glow-color) !important;
-        }
-        
-        /* Sonuç Linkleri */
-        .gs-webResult.gs-result a.gs-title:link, .gs-webResult.gs-result a.gs-title:visited {
-            color: #82aaff !important;
-            font-size: 20px !important;
-        }
-        
-        /* URL ve Açıklama Metinleri */
-        .gsc-url-top, .gs-webResult .gs-visibleUrl-breadcrumb {
-            color: var(--text-secondary-color) !important;
-        }
-        .gs-webResult .gs-snippet {
-            color: var(--text-color) !important;
-            font-size: 16px !important;
+        .search-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            outline: none;
+            padding: 20px 30px;
+            font-size: 18px;
+            color: #fff;
         }
 
-        /* Diğer Google Elementlerini Gizle/Ayarla */
-        .gsc-adBlock, .gsc-branding, .gsc-above-wrapper-area {
-            display: none !important;
+        .search-button {
+            background: var(--glow-color);
+            border: none;
+            border-radius: 0 50px 50px 0;
+            padding: 0 35px;
+            cursor: pointer;
         }
-        .gsc-results-wrapper-visible {
-             border-top: 1px solid #30363d !important;
-             margin-top: 30px !important;
+        .search-button svg { width: 24px; height: 24px; stroke: #010409; }
+        
+        /* --- YÜKLEME ANİMASYONU --- */
+        .loader-container {
+            display: flex;
+            justify-content: center;
+            padding: 50px;
         }
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.2);
+            border-top-color: var(--glow-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* --- GOOGLE SONUÇLARI İÇİN ÖZEL STİLLER --- */
+        #results-section {
+            padding-top: 20px;
+        }
+        .initial-message {
+            text-align: center; font-size: 18px; padding: 50px; color: var(--text-secondary-color);
+        }
+        .gsc-control-cse { background: transparent !important; border: none !important; padding: 0 !important; }
+        .gsc-webResult.gsc-result { background-color: rgba(22, 27, 34, 0.5) !important; border: 1px solid #30363d !important; border-radius: 12px !important; padding: 20px !important; margin-bottom: 20px !important; }
+        .gsc-webResult.gsc-result:hover { border-color: var(--glow-color) !important; }
+        .gs-webResult.gs-result a.gs-title:link, .gs-webResult.gs-result a.gs-title:visited { color: #82aaff !important; font-size: 20px !important; }
+        .gsc-url-top, .gs-webResult .gs-visibleUrl-breadcrumb { color: var(--text-secondary-color) !important; }
+        .gs-webResult .gs-snippet { color: var(--text-color) !important; font-size: 16px !important; }
+        .gsc-results .gsc-cursor-box .gsc-cursor-page { color: #82aaff !important; }
+        .gsc-search-box, .gsc-adBlock, .gsc-branding { display: none !important; }
     </style>
 </head>
 <body>
     
     <main class="main-container">
+        <!-- BİZİM ÖZEL ARAMA BÖLÜMÜMÜZ (HEP GÖRÜNÜR) -->
         <section class="search-section">
             <h1 class="logo">GG Search</h1>
-            
-            <!-- GOOGLE'IN STANDART ARAMA KUTUSU VE SONUÇ KODU -->
-            <div class="gcse-search"></div>
-            
+            <form class="search-form" id="search-form">
+                <input type="text" class="search-input" id="search-input-field" placeholder="İnternetin derinliklerinde ara..." required>
+                <button type="submit" class="search-button" aria-label="Ara">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                </button>
+            </form>
+        </section>
+
+        <!-- ARAMA SONUÇLARININ GÖSTERİLECEĞİ ALAN -->
+        <section id="results-section">
+            <div class="initial-message">
+                <p>GG Search'e hoş geldin.<br>Keşfetmeye hazır mısın?</p>
+            </div>
+            <!-- Google sonuçları bu div'in içine gizli bir şekilde yüklenecek -->
+            <div class="gcse-searchresults-only" style="display: block;"></div>
         </section>
     </main>
     
     <!-- Google Programmable Search Engine Kodu -->
     <script async src="https://cse.google.com/cse.js?cx=0429df85ca8fa4085"></script>
+    
+    <!-- Bizim Özel JavaScript Kodumuz -->
+    <script>
+        const searchForm = document.getElementById('search-form');
+        const searchInput = document.getElementById('search-input-field');
+        const resultsSection = document.getElementById('results-section');
+
+        const loaderHTML = `<div class="loader-container"><div class="loader"></div></div>`;
+
+        searchForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const query = searchInput.value.trim();
+            if (query) {
+                // Önceki içeriği temizle ve YÜKLEME ANİMASYONUNU göster
+                resultsSection.innerHTML = loaderHTML;
+
+                // Google'ın arama fonksiyonu hazır mı diye kontrol et
+                // Bu kontrol, yükleme sorununu çözmeye yardımcı olur
+                const checkGoogle = setInterval(function() {
+                    if (window.google && google.search && google.search.cse) {
+                        clearInterval(checkGoogle); // Kontrolü durdur
+                        
+                        // Google aramasını başlat
+                        const element = google.search.cse.element.getElement('searchresults-only');
+                        element.execute(query);
+                        
+                        // Sonuçları içeren div'i sonuçlar bölümüne ekle
+                        resultsSection.innerHTML = '<div class="gcse-searchresults-only"></div>';
+                    }
+                }, 100); // Her 100 milisaniyede bir kontrol et
+            }
+        });
+    </script>
 
 </body>
 </html>
