@@ -3,177 +3,727 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GG Search - Final Sürüm</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
-
-    <!-- CSS Kodları -->
+    <title>Sonsuz Kule Savunma - Final Sürüm</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --glow-color: hsl(217, 100%, 65%);
-            --background-color: #010409;
-            --text-color: #e6edf3;
-            --text-secondary-color: #7d8590;
+            --bg-color: #1a1a2e; --primary-color: #16213e; --secondary-color: #0f3460;
+            --accent-color: #e94560; --font-color: #dcdcdc; --grid-line-color: #2a2a3e; 
+            --path-color: #333a56; --font-family: 'Orbitron', sans-serif;
+            --success-color: #2ecc71; --poison-color: #9b59b6;
         }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: 'Roboto', sans-serif;
-            background-color: var(--background-color);
-            color: var(--text-color);
-        }
-
-        .main-container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 20px;
-        }
+        body { background-color: var(--bg-color); color: var(--font-color); display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: var(--font-family); overflow: hidden; }
+        #game-container { display: flex; border: 2px solid var(--accent-color); box-shadow: 0 0 20px var(--accent-color), inset 0 0 15px rgba(233, 69, 96, 0.5); transition: all 0.3s ease; }
+        canvas { background-color: var(--primary-color); display: block; }
+        #ui-panel { width: 250px; background-color: var(--secondary-color); padding: 20px; display: flex; flex-direction: column; border-left: 2px solid var(--accent-color); position: relative; }
+        .stats, .tower-selection, .tower-info { margin-bottom: 15px; }
         
-        /* ÜSTTE SABİT KALAN ARAMA BÖLÜMÜ */
-        .search-section {
-            padding: 60px 20px 30px 20px;
-            text-align: center;
-            position: sticky;
-            top: 0;
-            background: rgba(1, 4, 9, 0.85); /* Hafif transparan arkaplan */
-            backdrop-filter: blur(16px);      /* Arkadaki içeriği bulanıklaştır */
-            z-index: 100;
-            border-bottom: 1px solid #30363d;
+        .top-buttons { display: flex; gap: 5px; }
+        .top-btn { background: none; border: 1px solid var(--accent-color); color: var(--accent-color); font-family: var(--font-family); cursor: pointer; padding: 5px 8px; font-size: 1.1em; transition: all 0.2s ease; }
+        .top-btn:hover { background-color: var(--accent-color); color: var(--primary-color); }
+        .top-btn.active-layout { background-color: var(--accent-color); color: var(--primary-color); }
+
+        h2, h3 { color: var(--accent-color); text-align: center; margin-top: 0; border-bottom: 1px solid var(--accent-color); padding-bottom: 10px; text-shadow: 0 0 5px var(--accent-color); }
+        .stats h2 {
+            display: flex; justify-content: flex-end; align-items: center;
+            padding-bottom: 8px; margin-bottom: 15px; min-height: 34px;
         }
 
-        .logo {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 56px;
-            color: #fff;
-            animation: pulse-glow 3s infinite ease-in-out;
-            margin-bottom: 30px;
-        }
+        .stat { font-size: 1.1em; margin-bottom: 10px; padding-left: 5px; }
+        .event-timers { border-top: 1px solid var(--accent-color); padding-top: 10px; margin-bottom:15px; font-size: 0.9em; text-align: center; }
+        #active-event-container { font-weight: bold; }
+        #active-event-container.blood { color: #ff4500; }
+        #active-event-container.rainbow { color: #ff00ff; }
+        #active-event-container.chocolate { color: #d2691e; }
 
-        @keyframes pulse-glow {
-            0%, 100% { text-shadow: 0 0 10px var(--glow-color), 0 0 20px var(--glow-color); }
-            50% { text-shadow: 0 0 20px var(--glow-color), 0 0 40px var(--glow-color); }
-        }
-
-        .search-form {
-            display: flex;
-            border: 1.5px solid var(--glow-color);
-            border-radius: 50px;
-        }
-
-        .search-input {
-            width: 100%;
-            background: transparent;
-            border: none;
-            outline: none;
-            padding: 20px 30px;
-            font-size: 18px;
-            color: #fff;
-        }
-
-        .search-button {
-            background: var(--glow-color);
-            border: none;
-            border-radius: 0 50px 50px 0;
-            padding: 0 35px;
-            cursor: pointer;
-        }
-        .search-button svg { width: 24px; height: 24px; stroke: #010409; }
+        .tower-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .tower-btn { background-color: var(--primary-color); color: var(--font-color); border: 2px solid var(--accent-color); padding: 10px; cursor: pointer; font-family: var(--font-family); transition: all 0.2s ease; font-size: 0.9em; }
+        .tower-btn:hover:not(:disabled) { background-color: var(--accent-color); color: var(--primary-color); transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.4); }
+        .tower-btn.selected { background-color: var(--accent-color); box-shadow: 0 0 10px #e94560; }
+        .tower-btn:disabled { background-color: #444; color: #888; border-color: #666; cursor: not-allowed; position: relative; }
+        .tower-btn:disabled:hover::after { content: attr(title); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 5px; border-radius: 3px; font-size: 0.8em; white-space: nowrap; margin-bottom: 5px; z-index: 20; }
         
-        /* --- YÜKLEME ANİMASYONU --- */
-        .loader-container {
-            display: flex;
-            justify-content: center;
-            padding: 50px;
-        }
-        .loader {
-            width: 50px;
-            height: 50px;
-            border: 5px solid rgba(255, 255, 255, 0.2);
-            border-top-color: var(--glow-color);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+        #start-wave-btn, .action-btn { width: 100%; padding: 15px; font-size: 1.2em; }
+        #tower-info-content { font-size: 0.9em; min-height: 80px; }
+        #tower-action-buttons { margin-top: 10px; display: none; }
+        #game-action-buttons { margin-top: auto; }
+        #sell-btn { background-color: #c0392b; border-color: #e74c3c; margin-top: 5px;}
+        #sell-btn:hover:not(:disabled) { background-color: #e74c3c; }
 
-        /* --- GOOGLE SONUÇLARI İÇİN ÖZEL STİLLER --- */
-        #results-section {
-            padding-top: 20px;
-        }
-        .initial-message {
-            text-align: center; font-size: 18px; padding: 50px; color: var(--text-secondary-color);
-        }
-        .gsc-control-cse { background: transparent !important; border: none !important; padding: 0 !important; }
-        .gsc-webResult.gsc-result { background-color: rgba(22, 27, 34, 0.5) !important; border: 1px solid #30363d !important; border-radius: 12px !important; padding: 20px !important; margin-bottom: 20px !important; }
-        .gsc-webResult.gsc-result:hover { border-color: var(--glow-color) !important; }
-        .gs-webResult.gs-result a.gs-title:link, .gs-webResult.gs-result a.gs-title:visited { color: #82aaff !important; font-size: 20px !important; }
-        .gsc-url-top, .gs-webResult .gs-visibleUrl-breadcrumb { color: var(--text-secondary-color) !important; }
-        .gs-webResult .gs-snippet { color: var(--text-color) !important; font-size: 16px !important; }
-        .gsc-results .gsc-cursor-box .gsc-cursor-page { color: #82aaff !important; }
-        .gsc-search-box, .gsc-adBlock, .gsc-branding { display: none !important; }
+        .targeting-controls { display: flex; justify-content: space-around; margin: 10px 0; }
+        .targeting-btn { padding: 5px; font-size: 0.8em; flex-grow: 1; }
+        .targeting-btn.active { background-color: var(--success-color); border-color: var(--success-color); color: var(--primary-color); }
+
+        .game-speed-controls { display: flex; justify-content: center; gap: 5px; margin-bottom: 10px; }
+        .speed-btn { padding: 5px 10px; }
+        .speed-btn.active { background-color: var(--accent-color); color: var(--primary-color); }
+        
+        #game-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); display: none; align-items: center; justify-content: center; text-align: center; flex-direction: column; animation: fadeIn 0.5s ease; z-index: 10; }
+        #game-overlay-message { font-size: 3.5em; color: var(--accent-color); text-shadow: 0 0 15px var(--accent-color); }
+        #talent-point-award { font-size: 1.5em; color: var(--success-color); margin-top: 10px; }
+        #restart-btn { background-color: var(--accent-color); color: var(--primary-color); border: none; padding: 15px 30px; font-family: var(--font-family); font-size: 1.5em; cursor: pointer; margin-top: 20px; transition: transform 0.2s ease; }
+        #restart-btn:hover { transform: scale(1.05); }
+
+        .modal-panel { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(15, 52, 96, 0.98); display: none; flex-direction: column; padding: 20px; box-sizing: border-box; animation: fadeIn 0.3s ease; z-index: 5; }
+        .modal-panel h3 { margin-bottom: 20px; }
+        .modal-list { list-style: none; padding: 0; margin: 0; overflow-y: auto; flex-grow: 1; font-size: 0.9em; }
+        .modal-list li { background-color: var(--primary-color); padding: 10px; margin-bottom: 8px; border-left: 3px solid var(--accent-color); }
+        #talent-panel .talent { display: flex; justify-content: space-between; align-items: center; padding: 10px; margin-bottom: 8px; background-color: var(--primary-color); }
+        #talent-panel .talent button { font-size: 0.9em; padding: 8px; }
+        #talent-points-display { text-align: center; margin-bottom: 15px; font-size: 1.2em; color: var(--success-color); }
+        .close-modal-btn { margin-top: auto; padding: 10px; }
+
+        #game-container.mobile-mode { flex-direction: column; width: 95vw; height: auto; max-width: 450px;}
+        #game-container.mobile-mode #ui-panel { width: 100%; height: auto; border-left: none; border-top: 2px solid var(--accent-color); box-sizing: border-box; }
+        #game-container.mobile-mode canvas { width: 100%; height: auto; }
     </style>
 </head>
 <body>
-    
-    <main class="main-container">
-        <!-- BİZİM ÖZEL ARAMA BÖLÜMÜMÜZ (HEP GÖRÜNÜR) -->
-        <section class="search-section">
-            <h1 class="logo">GG Search</h1>
-            <form class="search-form" id="search-form">
-                <input type="text" class="search-input" id="search-input-field" placeholder="İnternetin derinliklerinde ara..." required>
-                <button type="submit" class="search-button" aria-label="Ara">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                </button>
-            </form>
-        </section>
-
-        <!-- ARAMA SONUÇLARININ GÖSTERİLECEĞİ ALAN -->
-        <section id="results-section">
-            <div class="initial-message">
-                <p>GG Search'e hoş geldin.<br>Keşfetmeye hazır mısın?</p>
+    <div id="game-container">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div id="ui-panel">
+            <div class="stats">
+                <h2>
+                    <div class="top-buttons">
+                        <button id="pc-mode-btn" class="top-btn active-layout">💻</button>
+                        <button id="mobile-mode-btn" class="top-btn">📱</button>
+                        <button id="talent-btn" class="top-btn" title="Yetenekler">⭐</button>
+                        <button id="patch-notes-btn" class="top-btn" title="Güncelleme Notları">📋</button>
+                        <button id="history-btn" class="top-btn" title="Geçmiş Oyunlar">🏆</button>
+                    </div>
+                </h2>
+                <div class="stat">❤️ Kale Canı: <span id="health">20</span></div>
+                <div class="stat">💰 Altın: <span id="money">200</span></div>
+                <div class="stat">🌊 Dalga: <span id="wave">0</span></div>
             </div>
-            <!-- Google sonuçları bu div'in içine gizli bir şekilde yüklenecek -->
-            <div class="gcse-searchresults-only" style="display: block;"></div>
-        </section>
-    </main>
-    
-    <!-- Google Programmable Search Engine Kodu -->
-    <script async src="https://cse.google.com/cse.js?cx=0429df85ca8fa4085"></script>
-    
-    <!-- Bizim Özel JavaScript Kodumuz -->
+            <div class="event-timers">
+                <div id="active-event-container" style="display:none;">
+                    <span id="active-event-name"></span>: <span id="active-event-timer"></span>
+                </div>
+                <div id="next-event-container"> Sonraki Etkinlik: <span id="next-event-timer">--:--</span> </div>
+            </div>
+            <div class="tower-selection">
+                <h3>KULELER</h3>
+                <div class="tower-buttons">
+                    <button class="tower-btn" data-tower="gun">M.Tüfek (50💰)</button>
+                    <button class="tower-btn" data-tower="cannon">Kanon (100💰)</button>
+                    <button class="tower-btn" data-tower="frost">Buz (75💰)</button>
+                    <button id="tesla-tower-btn" class="tower-btn" data-tower="tesla" disabled title="5. Dalgadan sonra açılır.">Tesla (150💰)</button>
+                    <button class="tower-btn" data-tower="toxin" style="border-color: var(--poison-color);">Toxin (80💰)</button>
+                    <button class="tower-btn" data-tower="aura" style="border-color: var(--success-color);">Aura (120💰)</button>
+                </div>
+            </div>
+            <div class="tower-info">
+                <h3>KULE BİLGİSİ</h3>
+                <div id="tower-info-content"><p>Bir kule seçin veya yerleştirdiğiniz bir kuleye tıklayın.</p></div>
+                <div id="tower-action-buttons">
+                    <div class="targeting-controls">
+                        <button class="tower-btn targeting-btn" data-target="first">İlk</button>
+                        <button class="tower-btn targeting-btn" data-target="strongest">Güçlü</button>
+                        <button class="tower-btn targeting-btn" data-target="weakest">Zayıf</button>
+                    </div>
+                    <button id="upgrade-btn" class="tower-btn action-btn">Yükselt</button>
+                    <button id="sell-btn" class="tower-btn action-btn">Sat</button>
+                </div>
+            </div>
+            <div id="game-action-buttons">
+                <div class="game-speed-controls">
+                    <button id="speed-1" class="tower-btn speed-btn active">1x</button>
+                    <button id="speed-2" class="tower-btn speed-btn">2x</button>
+                    <button id="speed-4" class="tower-btn speed-btn">4x</button>
+                </div>
+                <button id="start-wave-btn" class="tower-btn">DALGAYI BAŞLAT</button>
+            </div>
+            
+            <div id="talent-panel" class="modal-panel">
+                <h3>YETENEKLER</h3>
+                <div id="talent-points-display">Yetenek Puanı: 0</div>
+                <ul class="modal-list">
+                    <li class="talent"><span>Başlangıç Altını (+25)</span><div><span id="talent-gold-level">Sv. 0</span> <button data-talent="startGold" class="tower-btn">1 Puan</button></div></li>
+                    <li class="talent"><span>Kale Canı (+5)</span><div><span id="talent-health-level">Sv. 0</span> <button data-talent="castleHealth" class="tower-btn">1 Puan</button></div></li>
+                    <li class="talent"><span>Tüm Kule Hasarı (+%5)</span><div><span id="talent-damage-level">Sv. 0</span> <button data-talent="towerDamage" class="tower-btn">1 Puan</button></div></li>
+                    <li class="talent"><span>Tüm Kule Menzili (+%3)</span><div><span id="talent-range-level">Sv. 0</span> <button data-talent="towerRange" class="tower-btn">1 Puan</button></div></li>
+                </ul>
+                <button id="close-talent-btn" class="close-modal-btn tower-btn">Kapat</button>
+            </div>
+            <div id="history-panel" class="modal-panel">
+                <h3>GEÇMİŞ OYUNLAR</h3>
+                <ul id="history-list" class="modal-list"></ul>
+                <button id="close-history-btn" class="close-modal-btn tower-btn">Kapat</button>
+            </div>
+            <div id="patch-notes-panel" class="modal-panel">
+                <h3>GÜNCELLEME NOTLARI</h3>
+                <ul id="patch-notes-list" class="modal-list"></ul>
+                <!-- YENİ BÖLÜM BURADA -->
+                <h3 style="margin-top: 20px;">ETKİNLİK OLASILIKLARI</h3>
+                <ul id="event-probabilities-list" class="modal-list"></ul>
+                <button id="close-patch-notes-btn" class="close-modal-btn tower-btn">Kapat</button>
+            </div>
+        </div>
+    </div>
+    <div id="game-overlay">
+        <div id="game-overlay-message">Oyun Bitti!</div>
+        <div id="talent-point-award"></div>
+        <button id="restart-btn">Yeniden Başla</button>
+    </div>
+
     <script>
-        const searchForm = document.getElementById('search-form');
-        const searchInput = document.getElementById('search-input-field');
-        const resultsSection = document.getElementById('results-section');
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const TILE_SIZE = 40;
+        const GRID_WIDTH = canvas.width / TILE_SIZE;
+        const GRID_HEIGHT = canvas.height / TILE_SIZE;
+        const TOWER_COSTS = { gun: 50, cannon: 100, frost: 75, tesla: 150, toxin: 80, aura: 120 };
+        let gameState = 'idle';
 
-        const loaderHTML = `<div class="loader-container"><div class="loader"></div></div>`;
+        const ui = {
+            gameContainer: document.getElementById('game-container'),
+            health: document.getElementById('health'), money: document.getElementById('money'), wave: document.getElementById('wave'),
+            towerButtons: document.querySelectorAll('.tower-btn[data-tower]'), teslaTowerBtn: document.getElementById('tesla-tower-btn'),
+            towerInfoContent: document.getElementById('tower-info-content'), towerActionButtons: document.getElementById('tower-action-buttons'),
+            upgradeBtn: document.getElementById('upgrade-btn'), sellBtn: document.getElementById('sell-btn'),
+            startWaveBtn: document.getElementById('start-wave-btn'),
+            overlay: document.getElementById('game-overlay'), overlayMessage: document.getElementById('game-overlay-message'),
+            talentPointAward: document.getElementById('talent-point-award'), restartBtn: document.getElementById('restart-btn'),
+            talentBtn: document.getElementById('talent-btn'), talentPanel: document.getElementById('talent-panel'), closeTalentBtn: document.getElementById('close-talent-btn'), talentPointsDisplay: document.getElementById('talent-points-display'),
+            historyBtn: document.getElementById('history-btn'), historyPanel: document.getElementById('history-panel'), historyList: document.getElementById('history-list'), closeHistoryBtn: document.getElementById('close-history-btn'),
+            patchNotesBtn: document.getElementById('patch-notes-btn'), patchNotesPanel: document.getElementById('patch-notes-panel'), patchNotesList: document.getElementById('patch-notes-list'), closePatchNotesBtn: document.getElementById('close-patch-notes-btn'),
+            targetingBtns: document.querySelectorAll('.targeting-btn'), speedBtns: document.querySelectorAll('.speed-btn'),
+            pcModeBtn: document.getElementById('pc-mode-btn'), mobileModeBtn: document.getElementById('mobile-mode-btn'),
+            activeEventContainer: document.getElementById('active-event-container'), activeEventName: document.getElementById('active-event-name'), activeEventTimer: document.getElementById('active-event-timer'),
+            nextEventContainer: document.getElementById('next-event-container'), nextEventTimer: document.getElementById('next-event-timer'),
+        };
 
-        searchForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const query = searchInput.value.trim();
-            if (query) {
-                // Önceki içeriği temizle ve YÜKLEME ANİMASYONUNU göster
-                resultsSection.innerHTML = loaderHTML;
+        let money, wave, path, gameGrid, enemies, towers, projectiles, effects, selectedTowerType, selectedTower;
+        let mouse = { x: 0, y: 0 };
+        let portal = { x: 0, y: 0, animationFrame: 0 };
+        let castle = { x: 0, y: 0, maxHealth: 20, currentHealth: 20 };
+        let history = [];
+        let gameSpeed = 1;
+        let enemiesLeftToSpawn = 0;
+        let talentPoints = 0;
+        let talents = { startGold: 0, castleHealth: 0, towerDamage: 0, towerRange: 0 };
+        
+        const EVENT_DURATIONS = { rainbow: 120 * 1000, blood: 120 * 1000, chocolate: 600 * 1000 };
+        let nextEventTime = 0;
+        let eventCheckInterval = null;
+        let activeEvent = { type: 'none', endTime: 0 };
 
-                // Google'ın arama fonksiyonu hazır mı diye kontrol et
-                // Bu kontrol, yükleme sorununu çözmeye yardımcı olur
-                const checkGoogle = setInterval(function() {
-                    if (window.google && google.search && google.search.cse) {
-                        clearInterval(checkGoogle); // Kontrolü durdur
-                        
-                        // Google aramasını başlat
-                        const element = google.search.cse.element.getElement('searchresults-only');
-                        element.execute(query);
-                        
-                        // Sonuçları içeren div'i sonuçlar bölümüne ekle
-                        resultsSection.innerHTML = '<div class="gcse-searchresults-only"></div>';
-                    }
-                }, 100); // Her 100 milisaniyede bir kontrol et
+        const PATCH_NOTES = [
+            "<strong>⭐ YENİ: Etkinlikler Geri Döndü!</strong> Saatlik rastgele etkinlikler oyuna tekrar eklendi!",
+            "<strong>⭐ YENİ: Arayüz Kontrolü!</strong> PC ve Mobil ikonları ile oyun düzenini anında değiştirin.",
+            "<strong>⚠️ YENİ: Stratejik Tehdit!</strong> Farklı düşmanlar artık kaleye farklı miktarlarda hasar veriyor.",
+            "<strong>⭐ YENİ: Kolay Başlangıç!</strong> İlk dalga artık daha zayıf.",
+            "<strong>⭐ YENİ: Görsel Entegrasyon!</strong> Canlı portal ve can barlı kale eklendi.",
+            "<strong>⭐ YENİ: Kalıcı Yetenek Sistemi!</strong> Her 5 dalgada 1 puan kazanın!",
+            "<strong>🗼 YENİ KULE: Toxin & Aura!</strong>",
+            "<strong>👾 YENİ DÜŞMAN: Şifacı!</strong>",
+            "<strong>🎯 YENİ: Hedefleme & Hız Kontrolü!</strong>",
+            "<strong>🐛 HATA DÜZELTMELERİ:</strong> Kritik hatalar giderildi."
+        ];
+
+        class Enemy {
+            constructor(x, y, type) {
+                this.x = x; this.y = y; this.type = type; this.pathIndex = 0; this.radius = 15;
+                this.effects = { slow: { active: false, duration: 0 }, poison: { active: false, duration: 0, dps: 0 } };
+                this.isDead = false;
+                this.isChocolateBuffed = false;
+                switch (type) {
+                    case 'normal': this.baseHp = 100 + (wave * 10); this.speed = 1.5; this.bounty = 5; this.color = '#ff8c00'; this.castleDamage = 1; break;
+                    case 'fast': this.baseHp = 70 + (wave * 8); this.speed = 2.5; this.bounty = 7; this.color = '#ffff00'; this.castleDamage = 1; break;
+                    case 'tank': this.baseHp = 300 + (wave * 25); this.speed = 0.8; this.bounty = 10; this.color = '#8b0000'; this.castleDamage = 3; break;
+                    case 'boss': this.baseHp = 2000 + (wave * 100); this.speed = 0.6; this.bounty = 100; this.color = '#9400d3'; this.radius = 25; this.castleDamage = 10; break;
+                    case 'healer': this.baseHp = 400 + (wave * 20); this.speed = 1.0; this.bounty = 15; this.color = '#f0f8ff'; this.healPower = 10 + wave; this.healRange = 80; this.healCooldown = 120; this.castleDamage = 1; break;
+                }
+                this.applyEventHpBonus();
             }
-        });
-    </script>
+            applyEventHpBonus() {
+                const multiplier = activeEvent.type === 'blood' ? 1.5 : 1;
+                this.maxHp = this.baseHp * multiplier;
+                this.hp = this.maxHp;
+            }
+            update() {
+                if (this.effects.poison.active) {
+                    this.takeDamage(this.effects.poison.dps / 60);
+                    this.effects.poison.duration--;
+                    if (this.effects.poison.duration <= 0) this.effects.poison.active = false;
+                }
+                if (this.type === 'healer' && !this.isDead) {
+                    this.healCooldown--;
+                    if (this.healCooldown <= 0) {
+                        for (const otherEnemy of enemies) {
+                            if (otherEnemy !== this && !otherEnemy.isDead && otherEnemy.hp < otherEnemy.maxHp && Math.hypot(this.x - otherEnemy.x, this.y - otherEnemy.y) < this.healRange) {
+                                otherEnemy.hp = Math.min(otherEnemy.maxHp, otherEnemy.hp + this.healPower);
+                                effects.push(new Effect(otherEnemy.x, otherEnemy.y, 'lime', 15, 'heal'));
+                                this.healCooldown = 120; break;
+                            }
+                        }
+                    }
+                }
+                const currentSpeed = this.speed * (this.effects.slow.active ? 0.5 : 1);
+                if (this.pathIndex < path.length - 1) { 
+                    const target = path[this.pathIndex + 1]; const dx = target.x - this.x; const dy = target.y - this.y; const distance = Math.hypot(dx, dy); 
+                    if (distance < currentSpeed) { this.x = target.x; this.y = target.y; this.pathIndex++; } 
+                    else { this.x += (dx / distance) * currentSpeed; this.y += (dy / distance) * currentSpeed; } 
+                } else { castle.currentHealth -= this.castleDamage; this.hp = 0; this.isDead = true; }
+            }
+            draw() {
+                ctx.fillStyle = this.color; ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fill();
+                if (this.effects.poison.active) { ctx.strokeStyle = 'var(--poison-color)'; ctx.lineWidth = 3; ctx.stroke(); }
+                if (this.type === 'healer') { ctx.fillStyle = 'lime'; ctx.font = 'bold 18px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('+', this.x, this.y + 6); }
+                if (this.isChocolateBuffed) { ctx.font = '20px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('🍫', this.x, this.y - this.radius - 20); }
+                const barWidth = this.radius * 2; ctx.fillStyle = '#333'; ctx.fillRect(this.x - barWidth / 2, this.y - this.radius - 15, barWidth, 5);
+                ctx.fillStyle = 'green'; ctx.fillRect(this.x - barWidth / 2, this.y - this.radius - 15, barWidth * (this.hp / this.maxHp), 5);
+            }
+            takeDamage(amount) { 
+                if (this.isChocolateBuffed) amount /= 2;
+                this.hp -= amount; 
+                if (this.hp <= 0 && !this.isDead) {
+                    this.isDead = true; money += this.bounty; 
+                    effects.push(new Effect(this.x, this.y, this.color, this.radius));
+                }
+            }
+        }
 
+        class Tower {
+            constructor(gridX, gridY, type) {
+                this.gridX = gridX; this.gridY = gridY; this.x = gridX * TILE_SIZE; this.y = gridY * TILE_SIZE; this.type = type;
+                this.level = 1; this.target = null; this.fireCountdown = 0; this.totalCost = TOWER_COSTS[type];
+                this.targetingMode = 'first';
+                this.isChocolateBuffed = false;
+                switch (type) {
+                    case 'gun': this.baseRange = 120; this.fireRate = 20; this.damage = 10; this.upgradeCost = 75; this.color = '#00bfff'; break;
+                    case 'cannon': this.baseRange = 180; this.fireRate = 90; this.damage = 50; this.upgradeCost = 150; this.color = '#ff4500'; break;
+                    case 'frost': this.baseRange = 100; this.fireRate = 0; this.damage = 0.2; this.upgradeCost = 100; this.color = '#add8e6'; break;
+                    case 'tesla': this.baseRange = 140; this.fireRate = 100; this.damage = 40; this.upgradeCost = 200; this.color = '#7df9ff'; this.chainJumps = 2; break;
+                    case 'toxin': this.baseRange = 130; this.fireRate = 50; this.damage = 5; this.poisonDps = 10; this.poisonDuration = 180; this.upgradeCost = 100; this.color = 'var(--poison-color)'; break;
+                    case 'aura': this.baseRange = 90; this.fireRate = 0; this.damage = 0; this.rangeBoost = 1.15; this.rateBoost = 0.85; this.upgradeCost = 200; this.color = 'var(--success-color)'; break;
+                }
+            }
+            getFinalRange() { 
+                let finalRange = this.baseRange * (1 + talents.towerRange / 100); 
+                if (this.type !== 'aura') {
+                    towers.forEach(tower => { 
+                        if (tower.type === 'aura' && Math.hypot(this.x - tower.x, this.y - tower.y) < tower.baseRange * (1 + talents.towerRange / 100)) { 
+                            finalRange *= tower.rangeBoost; 
+                        } 
+                    });
+                }
+                return finalRange;
+            }
+            getFinalFireRate() { 
+                let finalFireRate = this.fireRate; 
+                towers.forEach(tower => { 
+                    if (tower.type === 'aura' && Math.hypot(this.x - tower.x, this.y - tower.y) < tower.baseRange * (1 + talents.towerRange / 100)) { 
+                        finalFireRate *= tower.rateBoost; 
+                    } 
+                }); 
+                return finalFireRate; 
+            }
+            getFinalDamage(baseDamage = this.damage) { 
+                let multiplier = 1 + (talents.towerDamage / 100);
+                if (activeEvent.type === 'rainbow') multiplier *= 2;
+                if (activeEvent.type === 'blood') multiplier *= 0.5;
+                if (this.isChocolateBuffed) multiplier *= 2;
+                return baseDamage * multiplier;
+            }
+            upgrade() {
+                if (money < this.upgradeCost) return;
+                money -= this.upgradeCost; this.totalCost += this.upgradeCost; this.level++;
+                this.baseRange *= 1.1; this.damage *= 1.5;
+                if (this.fireRate > 5) this.fireRate = Math.floor(this.fireRate * 0.9);
+                if (this.type === 'toxin') { this.poisonDps *= 1.4; }
+                if (this.type === 'aura') { this.rangeBoost += 0.05; this.rateBoost -= 0.03; }
+                this.upgradeCost = Math.floor(this.upgradeCost * 1.8);
+                updateTowerInfo();
+            }
+            findTarget() {
+                this.target = null;
+                const potentialTargets = enemies.filter(enemy => !enemy.isDead && Math.hypot(enemy.x - (this.x + TILE_SIZE / 2), enemy.y - (this.y + TILE_SIZE / 2)) < this.getFinalRange());
+                if (potentialTargets.length === 0) return;
+                if (this.targetingMode === 'first') this.target = potentialTargets.reduce((a, b) => a.pathIndex > b.pathIndex ? a : b);
+                else if (this.targetingMode === 'strongest') this.target = potentialTargets.reduce((a, b) => a.hp > b.hp ? a : b);
+                else if (this.targetingMode === 'weakest') this.target = potentialTargets.reduce((a, b) => a.hp < b.hp ? a : b);
+            }
+            update() {
+                if (this.fireCountdown > 0) this.fireCountdown--;
+                if (this.type === 'aura') return;
+                this.findTarget();
+                if (this.target && this.fireCountdown <= 0) {
+                    this.fireCountdown = this.getFinalFireRate();
+                    let pType = 'bullet';
+                    if (this.type === 'cannon') pType = 'cannonball';
+                    if (this.type === 'toxin') pType = 'poison';
+                    projectiles.push(new Projectile(this.x + TILE_SIZE / 2, this.y + TILE_SIZE / 2, this.target, this.getFinalDamage(), pType, this));
+                }
+            }
+            draw() {
+                let currentFillStyle = this.color; 
+                if (activeEvent.type === 'rainbow') { currentFillStyle = `hsl(${portal.animationFrame % 360}, 100%, 70%)`; }
+                ctx.fillStyle = currentFillStyle;
+                if (this.type === 'aura') {
+                    ctx.globalAlpha = 0.2; ctx.beginPath(); ctx.arc(this.x + TILE_SIZE / 2, this.y + TILE_SIZE / 2, this.getFinalRange(), 0, 2 * Math.PI); ctx.fill(); ctx.globalAlpha = 1.0;
+                }
+                ctx.fillRect(this.x + 5, this.y + 5, TILE_SIZE - 10, TILE_SIZE - 10);
+                if (this.isChocolateBuffed) { ctx.font = '15px sans-serif'; ctx.textAlign = "center"; ctx.fillText('🍫', this.x + TILE_SIZE/2, this.y + 12); }
+                if (selectedTower === this) { ctx.beginPath(); ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)'; ctx.lineWidth = 2; ctx.arc(this.x + TILE_SIZE / 2, this.y + TILE_SIZE / 2, this.getFinalRange(), 0, Math.PI * 2); ctx.stroke(); }
+            }
+        }
+
+        class Projectile {
+            constructor(x, y, target, damage, type, sourceTower) {
+                this.x = x; this.y = y; this.target = target; this.damage = damage; this.type = type; this.sourceTower = sourceTower;
+                switch (type) {
+                    case 'bullet': this.speed = 8; this.radius = 3; this.color = '#fff'; break;
+                    case 'cannonball': this.speed = 5; this.radius = 8; this.color = '#333'; this.splashRadius = 50; break;
+                    case 'poison': this.speed = 7; this.radius = 4; this.color = 'var(--poison-color)'; break;
+                }
+            }
+            update() {
+                if (!this.target || this.target.hp <= 0) { projectiles.splice(projectiles.indexOf(this), 1); return; }
+                const dx = this.target.x - this.x; const dy = this.target.y - this.y; const distance = Math.hypot(dx, dy);
+                if (distance < this.speed) { this.hit(); } else { this.x += (dx / distance) * this.speed; this.y += (dy / distance) * this.speed; }
+            }
+            hit() {
+                this.target.takeDamage(this.damage);
+                if (this.type === 'poison') { this.target.effects.poison = { active: true, duration: this.sourceTower.poisonDuration, dps: this.sourceTower.poisonDps }; }
+                projectiles.splice(projectiles.indexOf(this), 1);
+            }
+            draw() { ctx.fillStyle = this.color; ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fill(); }
+        }
+        
+        class Effect {
+             constructor(x, y, color, maxRadius = 10, type = 'explosion') {
+                this.x = x; this.y = y; this.color = color; this.radius = 0; this.maxRadius = maxRadius; this.life = 1; this.type = type;
+                if (type === 'blood_rain') { this.speed = 2 + Math.random() * 3; this.length = 10 + Math.random() * 10; }
+                if (type === 'chocolate_drop') { this.speed = 1 + Math.random() * 2; this.size = 20; }
+            }
+            update(){
+                if (this.type === 'blood_rain') {
+                    this.y += this.speed;
+                    if (this.y > canvas.height) this.life = 0;
+                } else if (this.type === 'chocolate_drop') {
+                    this.y += this.speed;
+                    if (this.y > canvas.height + this.size) this.life = 0; // Yok olma koşulu eklendi, ekranın biraz altı
+                } else {
+                    this.radius += (this.type === 'heal' ? 0.5 : 2);
+                }
+                if(this.type !== 'chocolate_drop') this.life -= 0.05;
+            }
+            draw(){
+                ctx.globalAlpha = this.life > 0 ? this.life : 0;
+                if (this.type === 'blood_rain') { ctx.strokeStyle = '#8b0000'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(this.x, this.y); ctx.lineTo(this.x, this.y - this.length); ctx.stroke(); }
+                else if (this.type === 'chocolate_drop') { ctx.font = `${this.size}px sans-serif`; ctx.textAlign = 'center'; ctx.fillText('🍫', this.x, this.y); }
+                else { ctx.fillStyle = this.color; ctx.beginPath(); ctx.arc(this.x, this.y, this.radius > this.maxRadius ? this.maxRadius : this.radius, 0, Math.PI * 2); ctx.fill(); }
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        function init() {
+            loadTalents();
+            castle.maxHealth = 20 + (talents.castleHealth * 5);
+            castle.currentHealth = castle.maxHealth;
+            money = 200 + (talents.startGold * 25);
+            wave = 0; setupMap(); enemies = []; towers = []; projectiles = []; effects = [];
+            selectedTowerType = null; selectedTower = null; gameState = 'idle';
+            ui.overlay.style.display = 'none'; ui.startWaveBtn.disabled = false;
+            ui.startWaveBtn.textContent = 'DALGAYI BAŞLAT';
+            setupEvents();
+            updateUI(); updateTowerInfo(); displayPatchNotes(); loadHistory();
+        }
+
+        function setupMap() {
+            gameGrid = Array.from({ length: GRID_HEIGHT }, () => Array(GRID_WIDTH).fill(0)); path = [];
+            const pathVariations = [
+                [{ x: 0, y: 7 }, { x: 4, y: 7 }, { x: 4, y: 3 }, { x: 8, y: 3 }, { x: 8, y: 11 }, { x: 13, y: 11 }, { x: 13, y: 6 }, { x: 19, y: 6 }],
+                [{ x: 2, y: 0 }, { x: 2, y: 5 }, { x: 10, y: 5 }, { x: 10, y: 2 }, { x: 16, y: 2 }, { x: 16, y: 8 }, { x: 5, y: 8 }, { x: 5, y: 12 }, { x: 19, y: 12 }],
+                [{ x: 0, y: 4 }, { x: 5, y: 4 }, { x: 5, y: 9 }, { x: 2, y: 9 }, { x: 2, y: 13 }, { x: 9, y: 13 }, { x: 9, y: 7 }, { x: 15, y: 7 }, { x: 15, y: 3 }, { x: 19, y: 3 }],
+                [{ x: 9, y: 0 }, { x: 9, y: 4 }, { x: 3, y: 4 }, { x: 3, y: 8 }, { x: 16, y: 8 }, { x: 16, y: 3 }, { x: 19, y: 3 }],
+                [{ x: 0, y: 2 }, { x: 17, y: 2 }, { x: 17, y: 12 }, { x: 2, y: 12 }, { x: 2, y: 7 }, { x: 19, y: 7 }],
+            ];
+            const cornerPoints = pathVariations[Math.floor(Math.random() * pathVariations.length)];
+            for (let i = 0; i < cornerPoints.length - 1; i++) { let p1 = cornerPoints[i], p2 = cornerPoints[i + 1]; let x = p1.x, y = p1.y; while (x !== p2.x || y !== p2.y) { if (y >= 0 && y < GRID_HEIGHT && x >= 0 && x < GRID_WIDTH) { gameGrid[y][x] = 1; path.push({ x: x * TILE_SIZE + TILE_SIZE / 2, y: y * TILE_SIZE + TILE_SIZE / 2 }); } if (x < p2.x) x++; else if (x > p2.x) x--; if (y < p2.y) y++; else if (y > p2.y) y--; } }
+            const lastPoint = cornerPoints[cornerPoints.length - 1]; gameGrid[lastPoint.y][lastPoint.x] = 1; path.push({ x: lastPoint.x * TILE_SIZE + TILE_SIZE / 2, y: lastPoint.y * TILE_SIZE + TILE_SIZE / 2 });
+            portal.x = path[0].x; portal.y = path[0].y;
+            const lastPathPoint = path[path.length - 1];
+            castle.x = Math.floor(lastPathPoint.x / TILE_SIZE) * TILE_SIZE; 
+            castle.y = Math.floor(lastPathPoint.y / TILE_SIZE) * TILE_SIZE;
+            gameGrid[Math.floor(castle.y / TILE_SIZE)][Math.floor(castle.x / TILE_SIZE)] = 3;
+        }
+
+        function generateWaveData(waveNum) {
+            if (waveNum === 1) { return { normal: 10 }; }
+            const data = { normal: 10 + waveNum * 2 };
+            if (waveNum > 2) data.fast = 5 + (waveNum - 2);
+            if (waveNum > 4) data.tank = 2 + (waveNum - 4);
+            if (waveNum > 6) data.healer = 1 + Math.floor((waveNum - 5) / 3);
+            if (waveNum > 0 && waveNum % 5 === 0) data.boss = 1 + Math.floor(waveNum / 10);
+            for (const key in data) { data[key] = Math.floor(data[key]); }
+            return data;
+        }
+
+        function startWave() {
+            if (gameState !== 'idle') return;
+            wave++; gameState = 'wave'; ui.startWaveBtn.disabled = true;
+            const waveData = generateWaveData(wave);
+            const enemiesToSpawn = [];
+            for (const type in waveData) { for (let i = 0; i < waveData[type]; i++) enemiesToSpawn.push(type); }
+            enemiesToSpawn.sort(() => Math.random() - 0.5);
+            enemiesLeftToSpawn = enemiesToSpawn.length;
+            let spawnInterval = Math.max(80, 400 - wave * 4);
+            enemiesToSpawn.forEach((enemyType, index) => { setTimeout(() => { if (gameState !== 'gameOver') { enemies.push(new Enemy(portal.x, portal.y, enemyType)); enemiesLeftToSpawn--; } }, index * spawnInterval); });
+            updateUI();
+        }
+
+        function update() {
+            if (gameState === 'gameOver') return;
+            portal.animationFrame++;
+            towers.forEach(t => t.update());
+            projectiles.forEach(p => p.update());
+            enemies.forEach(e => e.update());
+            effects.forEach(e => e.update());
+            effects = effects.filter(e => e.life > 0);
+            enemies = enemies.filter(e => !e.isDead);
+            updateChocolateCollisions();
+            if (gameState === 'wave' && enemies.length === 0 && enemiesLeftToSpawn === 0) {
+                gameState = 'idle'; money += 100 + wave * 5; ui.startWaveBtn.disabled = false;
+                ui.startWaveBtn.textContent = "SONRAKİ DALGA";
+            }
+            if (castle.currentHealth <= 0) {
+                castle.currentHealth = 0; gameState = 'gameOver'; saveHistory(wave);
+                clearInterval(eventCheckInterval);
+                const pointsEarned = Math.floor(wave / 5);
+                if (pointsEarned > 0) {
+                    talentPoints += pointsEarned; saveTalents();
+                    ui.talentPointAward.textContent = `+${pointsEarned} Yetenek Puanı Kazandın!`;
+                } else { ui.talentPointAward.textContent = ``; }
+                ui.overlayMessage.textContent = `Ulaşılan Dalga: ${wave}`;
+                ui.overlay.style.display = 'flex';
+            }
+            if (wave >= 4) {
+                 ui.teslaTowerBtn.disabled = money < TOWER_COSTS.tesla;
+                 if (ui.teslaTowerBtn.hasAttribute('title')) ui.teslaTowerBtn.removeAttribute('title');
+            }
+            updateUI();
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawMap(); drawPortal(); drawCastle();
+            towers.forEach(t => t.draw());
+            projectiles.forEach(p => p.draw());
+            enemies.forEach(e => e.draw());
+            effects.forEach(e => e.draw());
+            drawEvents();
+            if (selectedTowerType) { const gridX = Math.floor(mouse.x / TILE_SIZE); const gridY = Math.floor(mouse.y / TILE_SIZE); if(gridY < GRID_HEIGHT && gridX < GRID_WIDTH) {const canPlace = gameGrid[gridY]?.[gridX] === 0; ctx.fillStyle = canPlace ? 'rgba(0, 255, 0, 0.3)' : 'rgba(255, 0, 0, 0.3)'; ctx.fillRect(gridX * TILE_SIZE, gridY * TILE_SIZE, TILE_SIZE, TILE_SIZE);} }
+        }
+
+        function gameLoop() {
+            for (let i = 0; i < gameSpeed; i++) { update(); }
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function setupEvents() {
+            if (eventCheckInterval) clearInterval(eventCheckInterval);
+            const now = new Date(); const nextHour = new Date(now);
+            nextHour.setHours(now.getHours() + 1); nextHour.setMinutes(0); nextHour.setSeconds(0);
+            nextEventTime = nextHour.getTime();
+            eventCheckInterval = setInterval(updateEventTimers, 1000);
+            updateEventTimers();
+        }
+        function updateEventTimers() {
+            const now = Date.now();
+            if (activeEvent.type !== 'none') {
+                if (now >= activeEvent.endTime) { endActiveEvent(); } 
+                else { const remaining = activeEvent.endTime - now; ui.activeEventTimer.textContent = formatTime(remaining); ui.activeEventContainer.style.display = 'block'; ui.nextEventContainer.style.display = 'none'; }
+            } else {
+                ui.activeEventContainer.style.display = 'none'; ui.nextEventContainer.style.display = 'block';
+                if (now >= nextEventTime) { triggerRandomEvent(); } 
+                else { const remaining = nextEventTime - now; ui.nextEventTimer.textContent = formatTime(remaining); }
+            }
+        }
+        function triggerRandomEvent() {
+            const eventTypes = ['rainbow', 'blood', 'chocolate'];
+            const eventType = eventTypes[Math.floor(Math.random() * eventTypes.length)];
+            activeEvent = { type: eventType, endTime: Date.now() + EVENT_DURATIONS[eventType] };
+            
+            ui.activeEventContainer.className = eventType;
+            if (eventType === 'rainbow') { ui.activeEventName.textContent = 'Gökkuşağı Etkinliği'; } 
+            else if (eventType === 'blood') { ui.activeEventName.textContent = 'Kan Yağmuru'; enemies.forEach(e => e.applyEventHpBonus()); }
+            else if (eventType === 'chocolate') { ui.activeEventName.textContent = 'Çikolata Yağmuru'; }
+            
+            const now = new Date(); const nextHour = new Date(now); nextHour.setHours(now.getHours() + 1); nextHour.setMinutes(0); nextHour.setSeconds(0);
+            nextEventTime = nextHour.getTime();
+            updateTowerInfo();
+        }
+        function endActiveEvent() {
+            if (activeEvent.type === 'blood') { enemies.forEach(e => { const hpPercentage = e.hp / e.maxHp; e.maxHp /= 1.5; e.hp = e.maxHp * hpPercentage; }); }
+            activeEvent = { type: 'none', endTime: 0 };
+            updateTowerInfo();
+        }
+        function drawEvents() {
+            if (activeEvent.type === 'blood') { if (Math.random() < 0.2) { effects.push(new Effect(Math.random() * canvas.width, 0, null, 0, 'blood_rain')); } }
+            if (activeEvent.type === 'chocolate') { if (Math.random() < 0.05) effects.push(new Effect(Math.random() * canvas.width, 0, null, 0, 'chocolate_drop')); }
+        }
+        function updateChocolateCollisions() {
+            for (const effect of effects) {
+                if (effect.type === 'chocolate_drop' && effect.life > 0) {
+                    for(const tower of towers) { if (!tower.isChocolateBuffed && Math.hypot(effect.x - (tower.x + TILE_SIZE/2), effect.y - (tower.y + TILE_SIZE/2)) < TILE_SIZE/2) { tower.isChocolateBuffed = true; effect.life = 0; break; } }
+                    if (effect.life <= 0) continue;
+                    for(const enemy of enemies) { if (!enemy.isChocolateBuffed && Math.hypot(effect.x - enemy.x, effect.y - enemy.y) < enemy.radius) { enemy.isChocolateBuffed = true; effect.life = 0; break; } }
+                }
+            }
+        }
+        function formatTime(ms) { const totalSeconds = Math.floor(ms / 1000); const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0'); const seconds = (totalSeconds % 60).toString().padStart(2, '0'); return `${minutes}:${seconds}`; }
+        
+        function updateUI() {
+            ui.health.textContent = castle.currentHealth < 0 ? 0 : castle.currentHealth;
+            ui.money.textContent = Math.floor(money);
+            ui.wave.textContent = wave;
+            ui.towerButtons.forEach(btn => {
+                const cost = TOWER_COSTS[btn.dataset.tower];
+                if(cost) btn.disabled = money < cost;
+            });
+        }
+        function updateTowerInfo() {
+            if (selectedTower) {
+                ui.towerActionButtons.style.display = 'block';
+                const damage = Math.round(selectedTower.getFinalDamage());
+                ui.towerInfoContent.innerHTML = `<p><strong>Tür:</strong> ${selectedTower.type.toUpperCase()}</p><p><strong>Seviye:</strong> ${selectedTower.level}</p><p><strong>Hasar:</strong> ${damage}</p>`;
+                ui.upgradeBtn.textContent = `Yükselt (${selectedTower.upgradeCost}💰)`;
+                ui.upgradeBtn.disabled = money < selectedTower.upgradeCost;
+                const sellPrice = Math.floor(selectedTower.totalCost * 0.75);
+                ui.sellBtn.textContent = `Sat (${sellPrice}💰)`;
+                ui.targetingBtns.forEach(btn => { btn.classList.toggle('active', selectedTower.targetingMode === btn.dataset.target); });
+            } else {
+                ui.towerActionButtons.style.display = 'none';
+                ui.towerInfoContent.innerHTML = `<p>Bir kule seçin veya yerleştirdiğiniz bir kuleye tıklayın.</p>`;
+            }
+        }
+        function sellSelectedTower() {
+            if (!selectedTower) return;
+            const sellPrice = Math.floor(selectedTower.totalCost * 0.75);
+            money += sellPrice;
+            gameGrid[selectedTower.gridY][selectedTower.gridX] = 0;
+            towers = towers.filter(t => t !== selectedTower);
+            selectedTower = null;
+            updateUI();
+            updateTowerInfo();
+        }
+        function loadTalents() {
+            const savedTalents = localStorage.getItem('td_talents');
+            const savedPoints = localStorage.getItem('td_talentPoints');
+            if (savedTalents) talents = JSON.parse(savedTalents);
+            if (savedPoints) talentPoints = parseInt(savedPoints);
+            updateTalentUI();
+        }
+        function saveTalents() {
+            localStorage.setItem('td_talents', JSON.stringify(talents));
+            localStorage.setItem('td_talentPoints', talentPoints);
+        }
+        function updateTalentUI() {
+            ui.talentPointsDisplay.textContent = `Yetenek Puanı: ${talentPoints}`;
+            document.getElementById('talent-gold-level').textContent = `Sv. ${talents.startGold}`;
+            document.getElementById('talent-health-level').textContent = `Sv. ${talents.castleHealth}`;
+            document.getElementById('talent-damage-level').textContent = `Sv. ${talents.towerDamage}`;
+            document.getElementById('talent-range-level').textContent = `Sv. ${talents.towerRange}`;
+        }
+        function spendTalentPoint(talent) {
+            if (talentPoints > 0) {
+                talentPoints--;
+                talents[talent]++;
+                saveTalents();
+                updateTalentUI();
+            }
+        }
+        function loadHistory() { const saved = localStorage.getItem('towerDefenseHistory'); history = saved ? JSON.parse(saved) : []; displayHistory(); }
+        function saveHistory(score) { if (score > 0) { history.push(score); history.sort((a, b) => b - a); localStorage.setItem('towerDefenseHistory', JSON.stringify(history)); displayHistory(); } }
+        function displayHistory() { ui.historyList.innerHTML = ''; if (history.length === 0) { ui.historyList.innerHTML = '<li>Henüz geçmiş oyun yok.</li>'; return; } history.forEach(score => { const li = document.createElement('li'); li.textContent = `En Yüksek Dalga: ${score}`; ui.historyList.appendChild(li); }); }
+        function toggleModal(panel) { const isVisible = panel.style.display === 'flex'; panel.style.display = isVisible ? 'none' : 'flex'; }
+        function drawMap() { for (let y = 0; y < GRID_HEIGHT; y++) { for (let x = 0; x < GRID_WIDTH; x++) { if (gameGrid[y][x] === 1) { ctx.fillStyle = 'var(--path-color)'; ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE); } ctx.strokeStyle = 'var(--grid-line-color)'; ctx.strokeRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE); } } }
+        function drawPortal() {
+            ctx.save();
+            for (let i = 5; i > 0; i--) {
+                const radius = i * 5 + Math.sin(portal.animationFrame * 0.05 + i) * 5;
+                const alpha = 0.1 * i;
+                ctx.beginPath();
+                ctx.fillStyle = `rgba(148, 0, 211, ${alpha})`;
+                ctx.arc(portal.x, portal.y, radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+        }
+        function drawCastle() {
+            ctx.fillStyle = '#C0C0C0';
+            ctx.fillRect(castle.x, castle.y + 10, TILE_SIZE, TILE_SIZE - 10);
+            ctx.fillStyle = '#A9A9A9';
+            for (let i = 0; i < 4; i++) {
+                ctx.fillRect(castle.x + i * 10, castle.y + 5, 8, 5);
+            }
+            const barWidth = TILE_SIZE; const barHeight = 8; const barX = castle.x; const barY = castle.y - 5;
+            ctx.fillStyle = '#8B0000'; ctx.fillRect(barX, barY, barWidth, barHeight);
+            const healthPercentage = castle.currentHealth / castle.maxHealth;
+            ctx.fillStyle = '#00FF00'; ctx.fillRect(barX, barY, barWidth * (healthPercentage < 0 ? 0 : healthPercentage), barHeight);
+        }
+
+        function displayPatchNotes() {
+            const notesList = document.getElementById('patch-notes-list');
+            notesList.innerHTML = PATCH_NOTES.map(note => `<li>${note}</li>`).join('');
+
+            // YENİ: Etkinlik olasılıklarını gösteren bölüm
+            const eventProbabilities = [
+                { name: 'Kan Yağmuru', chance: 'Eşit Şans (~33%)' },
+                { name: 'Gökkuşağı', chance: 'Eşit Şans (~33%)' },
+                { name: 'Çikolata Yağmuru', chance: 'Eşit Şans (~33%)' }
+            ];
+            const eventList = document.getElementById('event-probabilities-list');
+            eventList.innerHTML = eventProbabilities.map(event => `<li><strong>${event.name}:</strong> ${event.chance}</li>`).join('');
+        }
+
+        // EVENT LISTENERS
+        ui.startWaveBtn.addEventListener('click', () => startWave());
+        ui.restartBtn.addEventListener('click', init);
+        canvas.addEventListener('mousemove', (e) => { const rect = canvas.getBoundingClientRect(); mouse.x = e.clientX - rect.left; mouse.y = e.clientY - rect.top; });
+        canvas.addEventListener('click', () => {
+            const gridX = Math.floor(mouse.x / TILE_SIZE); const gridY = Math.floor(mouse.y / TILE_SIZE);
+            if (selectedTowerType) {
+                if (gameGrid[gridY]?.[gridX] === 0 && money >= TOWER_COSTS[selectedTowerType]) {
+                    towers.push(new Tower(gridX, gridY, selectedTowerType));
+                    gameGrid[gridY][gridX] = 2; money -= TOWER_COSTS[selectedTowerType];
+                    selectedTowerType = null;
+                    ui.towerButtons.forEach(b => b.classList.remove('selected'));
+                }
+            } else { selectedTower = towers.find(t => t.gridX === gridX && t.gridY === gridY) || null; }
+            updateTowerInfo();
+        });
+        ui.towerButtons.forEach(btn => { btn.addEventListener('click', () => { if (btn.disabled) return; const towerType = btn.dataset.tower; selectedTowerType = (selectedTowerType === towerType) ? null : towerType; selectedTower = null; ui.towerButtons.forEach(b => b.classList.remove('selected')); if (selectedTowerType) btn.classList.add('selected'); updateTowerInfo(); }); });
+        ui.upgradeBtn.addEventListener('click', () => { if (selectedTower) selectedTower.upgrade(); });
+        ui.sellBtn.addEventListener('click', sellSelectedTower);
+        ui.targetingBtns.forEach(btn => { btn.addEventListener('click', () => { if (selectedTower) { selectedTower.targetingMode = btn.dataset.target; updateTowerInfo(); } }); });
+        ui.speedBtns.forEach(btn => { btn.addEventListener('click', () => { gameSpeed = parseInt(btn.id.split('-')[1]); ui.speedBtns.forEach(b => b.classList.remove('active')); btn.classList.add('active'); }); });
+        ui.talentBtn.addEventListener('click', () => toggleModal(ui.talentPanel));
+        ui.closeTalentBtn.addEventListener('click', () => toggleModal(ui.talentPanel));
+        document.querySelectorAll('#talent-panel button[data-talent]').forEach(btn => { btn.addEventListener('click', () => spendTalentPoint(btn.dataset.talent)); });
+        ui.historyBtn.addEventListener('click', () => toggleModal(ui.historyPanel));
+        ui.closeHistoryBtn.addEventListener('click', () => toggleModal(ui.historyPanel));
+        ui.patchNotesBtn.addEventListener('click', () => toggleModal(ui.patchNotesPanel));
+        ui.closePatchNotesBtn.addEventListener('click', () => toggleModal(ui.patchNotesPanel));
+        ui.pcModeBtn.addEventListener('click', () => {
+            ui.gameContainer.classList.remove('mobile-mode');
+            ui.pcModeBtn.classList.add('active-layout');
+            ui.mobileModeBtn.classList.remove('active-layout');
+        });
+        ui.mobileModeBtn.addEventListener('click', () => {
+            ui.gameContainer.classList.add('mobile-mode');
+            ui.mobileModeBtn.classList.add('active-layout');
+            ui.pcModeBtn.classList.remove('active-layout');
+        });
+
+        init();
+        gameLoop();
+    </script>
 </body>
 </html>
